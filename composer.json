@@ -1,5 +1,5 @@
 {
-    "name": "aLkRicha/capitalist",
+    "name": "alkricha/capitalist",
     "type": "library",
     "require": {
         "phpseclib/phpseclib": "^2.0"
