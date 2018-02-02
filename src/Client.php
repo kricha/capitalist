@@ -1,13 +1,17 @@
 <?php
 
+declare(strict_types=1);
+
+/*
+ * This file is part of capitalist.net api.
+ * (с) 2015 Capitalist.
+ */
+
 namespace aLkRicha\Capitalist;
-
-use aLkRicha\Capitalist\CapitalistException as Exception;
-
 
 /**
  * Смотрите актуальную документацию с примерами по адресу:
- * Read actual documentation at
+ * Read actual documentation at.
  *
  * https://capitalist.net/developers/api
  *
@@ -18,45 +22,55 @@ use aLkRicha\Capitalist\CapitalistException as Exception;
  * For questions, help, comments, discussion, etc., please
  * send e-mail to support@capitalist.net
  *
- * @link https://www.capitalist.net
+ * @see https://www.capitalist.net
+ *
  * @copyright 2015 Capitalist
+ *
  * @version 0.7
  */
 class Client
 {
-    const OPERATION_GET_TOKEN = 'get_token',
-        OPERATION_IMPORT_BATCH = 'import_batch',
-        OPERATION_GET_BATCH_INFO = 'get_batch_info',
-        OPERATION_REGISTER_INVITEE = 'register_invitee',
-        OPERATION_GET_HISTORY = 'get_documents_history',
-        OPERATION_GET_HISTORY_TEST = 'get_documents_history_test',
-        OPERATION_GET_ACCOUNTS = 'get_accounts',
-        OPERATION_CREATE_ACCOUNT = 'create_account',
-        OPERATION_GET_DOCUMENT_FEE = 'get_document_fee',
-        OPERATION_IMPORT_BATCH_ADV = 'import_batch_advanced',
-        OPERATION_PROCESS_BATCH = 'process_batch',
-        OPERATION_GET_CASHIN_REQUISITES = 'get_cashin_requisites',
-        OPERATION_REGISTRATION_EMAIL_CONFIRM = 'registration_email_confirm',
-        OPERATION_PASSWORD_RECOVERY = 'password_recovery',
-        OPERATION_PASSWORD_RECOVERY_GENERATE_CODE = 'password_recovery_generate_code',
-        OPERATION_GET_EMAIL_VERIFICATION_CODE = 'profile_get_verification_code',
-        OPERATION_IS_VERIFIED_ACCOUNT = 'is_verified_account',
-        OPERATION_ADD_NOTIFICATION = 'add_payment_notification',
-        OPERATION_DOCUMENTS_SEARCH = 'documents_search'
-    ;
+    const OPERATION_GET_TOKEN                       = 'get_token';
+    const OPERATION_IMPORT_BATCH                    = 'import_batch';
+    const OPERATION_GET_BATCH_INFO                  = 'get_batch_info';
+    const OPERATION_REGISTER_INVITEE                = 'register_invitee';
+    const OPERATION_GET_HISTORY                     = 'get_documents_history';
+    const OPERATION_GET_HISTORY_TEST                = 'get_documents_history_test';
+    const OPERATION_GET_ACCOUNTS                    = 'get_accounts';
+    const OPERATION_CREATE_ACCOUNT                  = 'create_account';
+    const OPERATION_GET_DOCUMENT_FEE                = 'get_document_fee';
+    const OPERATION_IMPORT_BATCH_ADV                = 'import_batch_advanced';
+    const OPERATION_PROCESS_BATCH                   = 'process_batch';
+    const OPERATION_GET_CASHIN_REQUISITES           = 'get_cashin_requisites';
+    const OPERATION_REGISTRATION_EMAIL_CONFIRM      = 'registration_email_confirm';
+    const OPERATION_PASSWORD_RECOVERY               = 'password_recovery';
+    const OPERATION_PASSWORD_RECOVERY_GENERATE_CODE = 'password_recovery_generate_code';
+    const OPERATION_GET_EMAIL_VERIFICATION_CODE     = 'profile_get_verification_code';
+    const OPERATION_IS_VERIFIED_ACCOUNT             = 'is_verified_account';
+    const OPERATION_ADD_NOTIFICATION                = 'add_payment_notification';
+    const OPERATION_DOCUMENTS_SEARCH                = 'documents_search';
 
-    const FORMAT_CSV = 'csv',
-        FORMAT_JSON = 'json',
-        FORMAT_JSONLITE = 'json-lite';
+    const FORMAT_CSV      = 'csv';
+    const FORMAT_JSON     = 'json';
+    const FORMAT_JSONLITE = 'json-lite';
 
-    const EMAIL_CONFIRM_TYPE_ACTIVATION = 1,
-        EMAIL_CONFIRM_TYPE_CHANGE = 0;
+    const EMAIL_CONFIRM_TYPE_ACTIVATION   = 1;
+    const EMAIL_CONFIRM_TYPE_CHANGE       = 0;
 
-    const NOTIFICATION_CHANNEL_EMAIL = 'EMAIL',
-        NOTIFICATION_CHANNEL_SMS = 'SMS';
+    const NOTIFICATION_CHANNEL_EMAIL   = 'EMAIL';
+    const NOTIFICATION_CHANNEL_SMS     = 'SMS';
 
-    const NOTIFICATION_LANG_RU = 'ru',
-        NOTIFICATION_LANG_EN = 'en';
+    const NOTIFICATION_LANG_RU   = 'ru';
+    const NOTIFICATION_LANG_EN   = 'en';
+
+    public $debugLog = false;
+
+    /**
+     * HTTP Заголовки крайнего ответа.
+     *
+     * @var array
+     */
+    protected $lastResponseHeaders = [];
 
     private $_API_url = null;
 
@@ -73,30 +87,21 @@ class Client
     /** @var string */
     private $lastResult;
 
-    /** @var string  */
+    /** @var string */
     private $apiAuthUser = '';
-    /** @var string  */
+    /** @var string */
     private $apiAuthPassword = '';
 
     /**
-     * Формат ответов - csv, json, json-lite
+     * Формат ответов - csv, json, json-lite.
      *
      * @var string */
     private $responseFormat = null;
 
-    /**
-     * HTTP Заголовки крайнего ответа
-     *
-     * @var array
-     */
-    protected $lastResponseHeaders = [];
-
-    public $debugLog = false;
-
     public function __construct($APIurl)
     {
         $this->_API_url = $APIurl;
-        $p = parse_url($APIurl);
+        $p              = parse_url($APIurl);
         if (isset($p['user'])) {
             $this->apiAuthUser = $p['user'];
         }
@@ -106,7 +111,7 @@ class Client
     }
 
     /**
-     * Инициализация сессии
+     * Инициализация сессии.
      */
     public function startSession($username, $password)
     {
@@ -115,49 +120,51 @@ class Client
     }
 
     /**
-     * Шифрование пароля
+     * Шифрование пароля.
      */
     public function encryptPassword($attributes, $password)
     {
         $encrypter = new Encrypter($attributes['modulus'], $attributes['exponent']);
+
         return $encrypter->encrypt($password);
     }
 
     /**
-     * Получение атрибутов шифрования и сессионного ключа (токена)
+     * Получение атрибутов шифрования и сессионного ключа (токена).
      *
      * Операция API: get_token
      *
+     * @throws CapitalistException
+     *
      * @return array
-     * @throws Exception
      */
     public function getSecurityAttributes()
     {
         if (!$this->sendPost($this::OPERATION_GET_TOKEN)) {
-            throw new Exception(sprintf('Error: %s: %s', $this->getLastErrorCode(), $this->getLastErrorMessage()));
+            throw new CapitalistException(sprintf('Error: %s: %s', $this->getLastErrorCode(), $this->getLastErrorMessage()));
         }
 
         switch ($this->getLastResponseFormat()) {
             case self::FORMAT_JSON:
                 $response = $this->getJsonResult();
-                $result = $response['data'];
+                $result   = $response['data'];
                 break;
             case self::FORMAT_JSONLITE:
                 $response = $this->getJsonResult();
-                $result = array(
-                    'token' => $response['data'][0][1],
-                    'modulus' => $response['data'][0][2],
-                    'exponent' => $response['data'][0][3]
-                );
+                $result   = [
+                    'token'    => $response['data'][0][1],
+                    'modulus'  => $response['data'][0][2],
+                    'exponent' => $response['data'][0][3],
+                ];
                 break;
             default:
             case self::FORMAT_CSV:
                 $response = $this->getCsvResult();
-                $result = array(
-                    'token' => $response[0][1],
-                    'modulus' => $response[0][2],
-                    'exponent' => $response[0][3]
-                );
+                $result   = [
+                    'token'    => $response[0][1],
+                    'modulus'  => $response[0][2],
+                    'exponent' => $response[0][3],
+                ];
             break;
         }
 
@@ -167,43 +174,46 @@ class Client
     }
 
     /**
-     * Отправка кода подтверждения для восстановления пароля
+     * Отправка кода подтверждения для восстановления пароля.
      *
      * Операция API: password_recovery_generate_code
      *
      * @param string $identity Имя пользователя или e-mail
-     * @throws Exception
+     *
+     * @throws CapitalistException
+     *
      * @return bool
      */
     public function sendPasswordRecoveryCode($identity)
     {
-        if (!$this->sendPost($this::OPERATION_PASSWORD_RECOVERY_GENERATE_CODE, array(
-            'identity' => $identity
-        ), true)) {
-            throw new Exception(sprintf('Error: %s: %s', $this->getLastErrorCode(), $this->getLastErrorMessage()));
+        if (!$this->sendPost($this::OPERATION_PASSWORD_RECOVERY_GENERATE_CODE, [
+            'identity' => $identity,
+        ], true)) {
+            throw new CapitalistException(sprintf('Error: %s: %s', $this->getLastErrorCode(), $this->getLastErrorMessage()));
         }
 
         return $this->getLastResult();
     }
 
-
     /**
-     * Отправка кода подтверждения для смены имейла или активации аккаунта
+     * Отправка кода подтверждения для смены имейла или активации аккаунта.
      *
      * Операция API: profile_get_verification_code
      *
-     * @param string $login Имя пользователя
-     * @param int $regCodeType Тип кода верификации
-     * @throws Exception
+     * @param string $login       Имя пользователя
+     * @param int    $regCodeType Тип кода верификации
+     *
+     * @throws CapitalistException
+     *
      * @return bool
      */
     public function sendEmailConfirmationCode($login, $regCodeType = self::EMAIL_CONFIRM_TYPE_ACTIVATION)
     {
-        if (!$this->sendPost($this::OPERATION_GET_EMAIL_VERIFICATION_CODE, array(
+        if (!$this->sendPost($this::OPERATION_GET_EMAIL_VERIFICATION_CODE, [
             'login' => $login,
-            'reg_code' => $regCodeType
-        ), true)) {
-            throw new Exception(sprintf('Error: %s: %s', $this->getLastErrorCode(), $this->getLastErrorMessage()));
+            'reg_code' => $regCodeType,
+        ], true)) {
+            throw new CapitalistException(sprintf('Error: %s: %s', $this->getLastErrorCode(), $this->getLastErrorMessage()));
         }
 
         return $this->getLastResult();
@@ -213,25 +223,26 @@ class Client
      * @param string $username
      * @param string $newPassword
      * @param string $confirmationCode
+     *
+     * @throws CapitalistException
+     *
      * @return bool
-     * @throws Exception
      */
     public function passwordRecovery($username, $newPassword, $confirmationCode)
     {
         $this->setUsername($username);
         $encryptedPassword = $this->encryptPassword($this->getSecurityAttributes(), $newPassword);
 
-        if (!$this->sendPost($this::OPERATION_PASSWORD_RECOVERY, array(
-            'login' => $username,
+        if (!$this->sendPost($this::OPERATION_PASSWORD_RECOVERY, [
+            'login'              => $username,
             'encrypted_password' => $encryptedPassword,
-            'code' => $confirmationCode
-        ), true)) {
-            throw new Exception(sprintf('Error: %s: %s', $this->getLastErrorCode(), $this->getLastErrorMessage()));
+            'code'               => $confirmationCode,
+        ], true)) {
+            throw new CapitalistException(sprintf('Error: %s: %s', $this->getLastErrorCode(), $this->getLastErrorMessage()));
         }
 
         return $this->getLastResult();
     }
-
 
     /**
      * @return string
@@ -243,17 +254,19 @@ class Client
 
     /**
      * @param string $username
+     *
      * @return $this
      */
     public function setUsername($username)
     {
         $this->username = $username;
+
         return $this;
     }
 
     public function hasError()
     {
-        return $this->getLastErrorCode() != 0;
+        return 0 !== $this->getLastErrorCode();
     }
 
     /**
@@ -274,11 +287,13 @@ class Client
 
     /**
      * @param string $lastErrorMessage
+     *
      * @return $this
      */
     public function setLastErrorMessage($lastErrorMessage)
     {
         $this->lastErrorMessage = $lastErrorMessage;
+
         return $this;
     }
 
@@ -299,10 +314,11 @@ class Client
     }
 
     /**
-     * Строку ответа getLastResult превращает в массив в зависимости от формата ответа
+     * Строку ответа getLastResult превращает в массив в зависимости от формата ответа.
+     *
+     * @throws CapitalistException
      *
      * @return array
-     * @throws Exception
      */
     public function getLastResultAsArray()
     {
@@ -317,11 +333,10 @@ class Client
                 return $this->getJsonliteResult();
                 break;
             default:
-                throw new Exception('Unknown response format.');
+                throw new CapitalistException('Unknown response format.');
                 break;
         }
     }
-
 
     /**
      * @return array
@@ -332,6 +347,7 @@ class Client
         foreach ((array) explode("\n", $this->lastResult) as $line) {
             $array[] = explode(';', $line);
         }
+
         return $array;
     }
 
@@ -345,42 +361,48 @@ class Client
 
     /**
      * @param string $lastResult
+     *
      * @return $this
      */
     public function setLastResult($lastResult)
     {
         $this->lastResult = $lastResult;
+
         return $this;
     }
 
     /**
      * @param int $lastErrorCode
+     *
      * @return $this
      */
     public function setLastErrorCode($lastErrorCode)
     {
-        $this->lastErrorCode = $lastErrorCode;
+        $this->lastErrorCode = (int) $lastErrorCode;
+
         return $this;
     }
 
     /**
-     * Операция API: import_batch
+     * Операция API: import_batch.
      *
      * @param string $batchContent
      * @param string $signature
      * @param string $accountRUR
      * @param string $accountEUR
      * @param string $accountUSD
-     * @return array
-     * @throws Exception
+     *
+     * @throws CapitalistException
+     *
+     * @deprecated
      */
     public function pushBatch($batchContent, $signature, $accountRUR, $accountEUR, $accountUSD)
     {
-        throw new Exception('API method import_batch is deprecated. Please use import_batch_advanced instead.');
+        throw new CapitalistException('API method import_batch is deprecated. Please use import_batch_advanced instead.');
     }
 
     /**
-     * Операция API: import_batch_advanced
+     * Операция API: import_batch_advanced.
      *
      * @param string $batchContent
      * @param string $accountRUR
@@ -388,12 +410,14 @@ class Client
      * @param string $accountUSD
      * @param string $verificationType
      * @param string $verificationData
-     * @return array
-     * @throws Exception
+     *
+     * @throws CapitalistException
+     *
+     * @return string
      */
     public function pushBatchAdvanced($batchContent, $accountRUR, $accountEUR, $accountUSD, $accountBTC = null, $verificationType, $verificationData = null)
     {
-        if (!$this->sendPost($this::OPERATION_IMPORT_BATCH_ADV, array(
+        if (!$this->sendPost($this::OPERATION_IMPORT_BATCH_ADV, [
             'encrypted_password' => $this->getPassword(),
             'token' => $this->token,
             'account_RUR' => $accountRUR,
@@ -402,58 +426,61 @@ class Client
             'account_BTC' => $accountBTC,
             'batch' => $batchContent,
             'verification_type' => $verificationType,
-            'verification_data' => $verificationData
-        ))
+            'verification_data' => $verificationData,
+        ])
         ) {
-            throw new Exception(sprintf('Error: %s: %s', $this->getLastErrorCode(), $this->getLastErrorMessage()));
+            throw new CapitalistException(sprintf('Error: %s: %s', $this->getLastErrorCode(), $this->getLastErrorMessage()));
         }
 
         return $this->getLastResult();
     }
 
     /**
-     * Операция API: add_payment_notification
+     * Операция API: add_payment_notification.
      *
-     * @return array
-     * @throws Exception
+     * @throws CapitalistException
+     *
+     * @return string
      */
     public function addPaymentNotification($document, $channel = self::NOTIFICATION_CHANNEL_EMAIL, $address, $language = self::NOTIFICATION_LANG_RU)
     {
-        if (!$this->sendPost($this::OPERATION_ADD_NOTIFICATION, array(
+        if (!$this->sendPost($this::OPERATION_ADD_NOTIFICATION, [
             'encrypted_password' => $this->getPassword(),
             'token' => $this->token,
             'document' => $document,
             'channel' => $channel,
             'address' => $address,
-            'language' => $language
-        ))
+            'language' => $language,
+        ])
         ) {
-            throw new Exception(sprintf('Error: %s: %s', $this->getLastErrorCode(), $this->getLastErrorMessage()));
+            throw new CapitalistException(sprintf('Error: %s: %s', $this->getLastErrorCode(), $this->getLastErrorMessage()));
         }
 
         return $this->getLastResult();
     }
 
     /**
-     * Операция API: process_batch
+     * Операция API: process_batch.
      *
      * @param string $batchId
      * @param string $verificationType
      * @param string $verificationData
-     * @return array
-     * @throws Exception
+     *
+     * @throws CapitalistException
+     *
+     * @return string
      */
     public function processBatch($batchId, $verificationType, $verificationData)
     {
-        if (!$this->sendPost($this::OPERATION_PROCESS_BATCH, array(
+        if (!$this->sendPost($this::OPERATION_PROCESS_BATCH, [
             'encrypted_password' => $this->getPassword(),
             'token' => $this->token,
             'batch_id' => $batchId,
             'verification_type' => $verificationType,
-            'verification_data' => $verificationData
-        ))
+            'verification_data' => $verificationData,
+        ])
         ) {
-            throw new Exception(sprintf('Error: %s: %s', $this->getLastErrorCode(), $this->getLastErrorMessage()));
+            throw new CapitalistException(sprintf('Error: %s: %s', $this->getLastErrorCode(), $this->getLastErrorMessage()));
         }
 
         return $this->getLastResult();
@@ -469,123 +496,132 @@ class Client
 
     /**
      * @param string $password
+     *
      * @return $this
      */
     public function setPassword($password)
     {
         $this->password = $password;
+
         return $this;
     }
 
     /**
-     * Операция API: documents_search
+     * Операция API: documents_search.
      *
-     * @return array
-     * @throws Exception
+     * @throws CapitalistException
+     *
+     * @return string
      */
     public function documentsSearch($customNumber = null, $beginDate = null, $endDate = null)
     {
-        if (!$this->sendPost($this::OPERATION_DOCUMENTS_SEARCH, array(
+        if (!$this->sendPost($this::OPERATION_DOCUMENTS_SEARCH, [
             'encrypted_password' => $this->getPassword(),
             'token' => $this->token,
             'customNumber' => $customNumber,
             'beginDate' => $beginDate,
             'endDate' => $endDate,
-        ))
+        ])
         ) {
-            throw new Exception(sprintf('Error: %s: %s', $this->getLastErrorCode(), $this->getLastErrorMessage()));
+            throw new CapitalistException(sprintf('Error: %s: %s', $this->getLastErrorCode(), $this->getLastErrorMessage()));
         }
 
         return $this->getLastResult();
     }
 
-
     /**
-     * Операция API: get_batch_info
+     * Операция API: get_batch_info.
      *
      * @param string $batchId
-     * @param int $pageSize
-     * @param int $offset
-     * @return array
-     * @throws Exception
+     * @param int    $pageSize
+     * @param int    $offset
+     *
+     * @throws CapitalistException
+     *
+     * @return string
      */
     public function getBatchRecords($batchId, $pageSize = 100, $offset = 0)
     {
-        if (!$this->sendPost($this::OPERATION_GET_BATCH_INFO, array(
+        if (!$this->sendPost($this::OPERATION_GET_BATCH_INFO, [
             'encrypted_password' => $this->getPassword(),
             'token' => $this->token,
             'batch_id' => $batchId,
             'page_size' => $pageSize,
-            'start_offset' => $offset
-        ))
+            'start_offset' => $offset,
+        ])
         ) {
-            throw new Exception(sprintf('Error: %s: %s', $this->getLastErrorCode(), $this->getLastErrorMessage()));
+            throw new CapitalistException(sprintf('Error: %s: %s', $this->getLastErrorCode(), $this->getLastErrorMessage()));
         }
 
         return $this->getLastResult();
     }
 
     /**
-     * Операция API: register_invitee
+     * Операция API: register_invitee.
      *
-     * @param string $username
-     * @param string $email
-     * @param string $nickname
-     * @param bool|string $mobile (optional)
-     * @throws Exception
+     * @param string      $username
+     * @param string      $email
+     * @param string      $nickname
+     * @param bool|string $mobile   (optional)
+     *
+     * @throws CapitalistException
+     *
      * @return string
      */
     public function registerInvitee($username, $email, $nickname, $mobile = false)
     {
-        if (!$this->sendPost($this::OPERATION_REGISTER_INVITEE, array(
+        if (!$this->sendPost($this::OPERATION_REGISTER_INVITEE, [
             'encrypted_password' => $this->getPassword(),
             'token' => $this->token,
             'invitee_login' => $username,
             'invitee_email' => $email,
             'invitee_nickname' => $nickname,
-            'invitee_mobile' => $mobile
-        ))
+            'invitee_mobile' => $mobile,
+        ])
         ) {
-            throw new Exception(sprintf('Error: %s: %s', $this->getLastErrorCode(), $this->getLastErrorMessage()));
+            throw new CapitalistException(sprintf('Error: %s: %s', $this->getLastErrorCode(), $this->getLastErrorMessage()));
         }
 
         return $this->getLastResult();
     }
 
     /**
-     * Операция API: get_cashin_requisites
+     * Операция API: get_cashin_requisites.
+     *
+     * @throws CapitalistException
      *
      * @return string
-     * @throws Exception
      */
     public function getCashInRequisites()
     {
-        if (!$this->sendPost($this::OPERATION_GET_CASHIN_REQUISITES, array(
+        if (!$this->sendPost($this::OPERATION_GET_CASHIN_REQUISITES, [
             'encrypted_password' => $this->getPassword(),
             'token' => $this->token,
-        ))
+        ])
         ) {
-            throw new Exception(sprintf('Error: %s: %s', $this->getLastErrorCode(), $this->getLastErrorMessage()));
+            throw new CapitalistException(sprintf('Error: %s: %s', $this->getLastErrorCode(), $this->getLastErrorMessage()));
         }
 
         return $this->getLastResult();
     }
 
     /**
-     * Операция API: get_documents_history
+     * Операция API: get_documents_history.
      *
      * @param string $account
-     * @param string $from (optional)
-     * @param string $to (optional)
+     * @param string $from     (optional)
+     * @param string $to       (optional)
      * @param string $docState (optional)
-     * @param int $limit (optional)
-     * @param int $page (optional)
-     * @throws Exception
+     * @param int    $limit    (optional)
+     * @param int    $page     (optional)
+     *
+     * @throws CapitalistException
+     *
      * @return string
      */
     public function getHistory($account, $from = null, $to = null, $docState = null, $limit = 30, $page = 1)
     {
-        if (!$this->sendPost($this::OPERATION_GET_HISTORY, array(
+        if (!$this->sendPost($this::OPERATION_GET_HISTORY, [
             'encrypted_password' => $this->getPassword(),
             'token' => $this->token,
             'account' => $account,
@@ -593,31 +629,34 @@ class Client
             'period_to' => $to,
             'document_state' => $docState,
             'limit' => $limit,
-            'page' => $page
-        ))
+            'page' => $page,
+        ])
         ) {
-            throw new Exception(sprintf('Error: %s: %s', $this->getLastErrorCode(), $this->getLastErrorMessage()));
+            throw new CapitalistException(sprintf('Error: %s: %s', $this->getLastErrorCode(), $this->getLastErrorMessage()));
         }
 
         return $this->getLastResult();
     }
 
     /**
-     * Операция API: get_documents_history_test
+     * Операция API: get_documents_history_test.
      *
      * @param string $account
-     * @param string $from (optional)
-     * @param string $to (optional)
+     * @param string $from     (optional)
+     * @param string $to       (optional)
      * @param string $docState (optional)
-     * @param int $limit (optional)
-     * @param int $page (optional)
-     * @throws Exception
+     * @param int    $limit    (optional)
+     * @param int    $page     (optional)
+     *
+     * @throws CapitalistException
+     *
      * @internal param string $token
+     *
      * @return string
      */
     public function getHistoryTest($account, $from = null, $to = null, $docState = null, $limit = 30, $page = 1)
     {
-        if (!$this->sendPost($this::OPERATION_GET_HISTORY_TEST, array(
+        if (!$this->sendPost($this::OPERATION_GET_HISTORY_TEST, [
             'encrypted_password' => $this->getPassword(),
             'token' => $this->token,
             'account' => $account,
@@ -625,190 +664,280 @@ class Client
             'period_to' => $to,
             'document_state' => $docState,
             'limit' => $limit,
-            'page' => $page
-        ))
+            'page' => $page,
+        ])
         ) {
-            throw new Exception(sprintf('Error: %s: %s', $this->getLastErrorCode(), $this->getLastErrorMessage()));
+            throw new CapitalistException(sprintf('Error: %s: %s', $this->getLastErrorCode(), $this->getLastErrorMessage()));
         }
 
         return $this->getLastResult();
     }
 
     /**
-     * Операция API: registration_email_confirm
+     * Операция API: registration_email_confirm.
      *
      * @param string $codeFromEmail
-     * @throws Exception
+     *
+     * @throws CapitalistException
+     *
      * @return bool
      */
     public function registrationEmailConfirm($codeFromEmail)
     {
-        if (!$this->sendPost($this::OPERATION_REGISTRATION_EMAIL_CONFIRM, array(
+        if (!$this->sendPost($this::OPERATION_REGISTRATION_EMAIL_CONFIRM, [
             'code' => $codeFromEmail,
-        ))
+        ])
         ) {
-            throw new Exception(sprintf('Error: %s: %s', $this->getLastErrorCode(), $this->getLastErrorMessage()));
+            throw new CapitalistException(sprintf('Error: %s: %s', $this->getLastErrorCode(), $this->getLastErrorMessage()));
         }
 
         return $this->getLastResult();
     }
 
     /**
-     * Операция API: get_accounts
+     * Операция API: get_accounts.
+     *
+     * @throws CapitalistException
      *
      * @return string
-     * @throws Exception
      */
     public function getUserAccounts()
     {
-        if (!$this->sendPost($this::OPERATION_GET_ACCOUNTS, array(
+        if (!$this->sendPost($this::OPERATION_GET_ACCOUNTS, [
             'encrypted_password' => $this->getPassword(),
-            'token' => $this->token
-        ))
+            'token' => $this->token,
+        ])
         ) {
-            throw new Exception(sprintf('Error: %s: %s', $this->getLastErrorCode(), $this->getLastErrorMessage()));
+            throw new CapitalistException(sprintf('Error: %s: %s', $this->getLastErrorCode(), $this->getLastErrorMessage()));
         }
 
         return $this->getLastResult();
     }
 
     /**
-     * Проверка, верифицрован ли владелец счета
+     * Проверка, верифицрован ли владелец счета.
      *
      * Операция API: is_verified_account
      *
      * @param string $account Номер счета, например, R0978541
-     * @throws Exception
+     *
+     * @throws CapitalistException
+     *
      * @return bool
      */
     public function isVerifiedUserByAccountNumber($account)
     {
-        if (!$this->sendPost($this::OPERATION_IS_VERIFIED_ACCOUNT, array(
+        if (!$this->sendPost($this::OPERATION_IS_VERIFIED_ACCOUNT, [
             'account' => $account,
             'encrypted_password' => $this->getPassword(),
-            'token' => $this->token
-        ))) {
-            throw new Exception(sprintf('Error: %s: %s', $this->getLastErrorCode(), $this->getLastErrorMessage()));
+            'token' => $this->token,
+        ])) {
+            throw new CapitalistException(sprintf('Error: %s: %s', $this->getLastErrorCode(), $this->getLastErrorMessage()));
         }
 
         return $this->getLastResult();
     }
 
     /**
-     * Вызов операции с произвольными параметрами
+     * Вызов операции с произвольными параметрами.
      *
      * @param $operation
      * @param array $params
-     * @param bool $guest
+     * @param bool  $guest
+     *
+     * @throws \aLkRicha\Capitalist\CapitalistException
      *
      * @return string
-     * @throws \Exception
      */
     public function callOperation($operation, $params = [], $guest = false)
     {
         $p = array_merge($guest ? [] : [
             'encrypted_password' => $this->getPassword(),
-            'token' => $this->token
+            'token'              => $this->token,
         ], $params);
 
         if (!$this->sendPost($operation, $p)) {
-            throw new Exception(sprintf('Error: %s: %s', $this->getLastErrorCode(), $this->getLastErrorMessage()));
+            throw new CapitalistException(sprintf('Error: %s: %s', $this->getLastErrorCode(), $this->getLastErrorMessage()));
         }
 
         return $this->getLastResult();
     }
 
     /**
-     * Операция API: create_account
+     * Операция API: create_account.
+     *
+     * @throws CapitalistException
      *
      * @return string
-     * @throws Exception
      */
     public function createAccount($currency, $title)
     {
-        if (!$this->sendPost($this::OPERATION_CREATE_ACCOUNT, array(
+        if (!$this->sendPost($this::OPERATION_CREATE_ACCOUNT, [
             'encrypted_password' => $this->getPassword(),
             'token' => $this->token,
             'account_name' => $title,
-            'account_currency' => $currency
-        ))
+            'account_currency' => $currency,
+        ])
         ) {
-            throw new Exception(sprintf('Error: %s: %s', $this->getLastErrorCode(), $this->getLastErrorMessage()));
+            throw new CapitalistException(sprintf('Error: %s: %s', $this->getLastErrorCode(), $this->getLastErrorMessage()));
         }
 
         return $this->getLastResult();
     }
 
-
     /**
-     * Операция API: get_document_fee
+     * Операция API: get_document_fee.
      *
      * @param string $docType
-     * @param array $paymentDetails
-     * @throws Exception
+     * @param array  $paymentDetails
+     *
+     * @throws CapitalistException
+     *
      * @return string
      */
     public function getDocumentFee($docType, $paymentDetails)
     {
-        if (!$this->sendPost($this::OPERATION_GET_DOCUMENT_FEE, array_merge(array(
+        if (!$this->sendPost($this::OPERATION_GET_DOCUMENT_FEE, array_merge([
             'encrypted_password' => $this->getPassword(),
             'token' => $this->token,
             'document_type' => $docType,
-        ), $paymentDetails))
+        ], $paymentDetails))
         ) {
-            throw new Exception(sprintf('Error: %s: %s', $this->getLastErrorCode(), $this->getLastErrorMessage()));
+            throw new CapitalistException(sprintf('Error: %s: %s', $this->getLastErrorCode(), $this->getLastErrorMessage()));
         }
 
         return $this->getLastResult();
     }
 
     /**
-     * Service functions block
+     * @return string
+     */
+    public function getResponseFormat()
+    {
+        return $this->responseFormat;
+    }
+
+    /**
+     * @param string $responseFormat
+     *
+     * @return $this
+     */
+    public function setResponseFormat($responseFormat)
+    {
+        $this->responseFormat = $responseFormat;
+
+        return $this;
+    }
+
+    /**
+     * Формат последнего ответа, пришедший в заголовке ответа,
+     * при нормальном функционировании, всегда совпадае с x-response-format переданным в заголовках запроса.
+     * Если не совпадают, значит что-то пошло не так.
+     *
+     * @return string
+     */
+    public function getLastResponseFormat()
+    {
+        $headers = $this->getLastResponseHeaders();
+
+        return $headers['x-response-format'] ?? null;
+    }
+
+    /**
+     * @return array
+     */
+    public function getLastResponseHeaders()
+    {
+        return $this->lastResponseHeaders;
+    }
+
+    /**
+     * @param array $lastResponseHeaders
+     *
+     * @return $this
+     */
+    public function setLastResponseHeaders($lastResponseHeaders)
+    {
+        $this->lastResponseHeaders = $lastResponseHeaders;
+
+        return $this;
+    }
+
+    /**
+     * @param $string
+     *
+     * @return array
+     */
+    public function parseHttpHeaders($string)
+    {
+        $headers = [];
+        foreach ((array) explode("\r\n", $string) as $line) {
+            $kv = explode(': ', $line, 2);
+
+            if (isset($kv[0]) && trim($kv[0])) {
+                $headers[trim($kv[0])] = $kv[1] ?? null;
+            }
+        }
+
+        return $headers;
+    }
+
+    public function log($string)
+    {
+        if ($this->debugLog) {
+            printf("\n[%s] debug log: %s\n", date('d.m.Y H:i:s'), $string);
+        }
+    }
+
+    /**
+     * Service functions block.
      */
 
     /**
-     * Вызов API
+     * Вызов API.
      *
      * @param string $operation
-     * @param array $params
-     * @param bool $anonymous
-     * @throws Exception
+     * @param array  $params
+     * @param bool   $anonymous
+     *
+     * @throws CapitalistException
+     *
      * @return mixed
      */
-    protected function sendPost($operation, $params = array(), $anonymous = false)
+    protected function sendPost($operation, $params = [], $anonymous = false)
     {
-        $data = array_merge(array('operation' => $operation), $params);
+        $data = array_merge(['operation' => $operation], $params);
 
         if (!$anonymous) {
-            $data = array_merge($data, array('login' => $this->getUsername()));
+            $data = array_merge($data, ['login' => $this->getUsername()]);
         }
 
         $ch = curl_init($this->_API_url);
 
-        $options = array(
+        $options = [
             CURLOPT_RETURNTRANSFER => true,     // return web page
             CURLOPT_HEADER         => true,     // return headers
             CURLOPT_FOLLOWLOCATION => true,     // follow redirects
-            CURLOPT_ENCODING       => "",       // handle all encodings
-            CURLOPT_USERAGENT      => "Client", // who am i
+            CURLOPT_ENCODING       => '',       // handle all encodings
+            CURLOPT_USERAGENT      => 'Client', // who am i
             CURLOPT_AUTOREFERER    => true,     // set referer on redirect
             CURLOPT_CONNECTTIMEOUT => 120,      // timeout on connect
             CURLOPT_TIMEOUT        => 120,      // timeout on response
             CURLOPT_MAXREDIRS      => 10,       // stop after 10 redirects
-            CURLOPT_SSL_VERIFYPEER => false     // Disabled SSL Cert checks
-        );
+            CURLOPT_SSL_VERIFYPEER => false,     // Disabled SSL Cert checks
+        ];
         curl_setopt_array($ch, $options);
 
         curl_setopt($ch, CURLOPT_POST, true);
         curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($data));
         if ($this->apiAuthUser) {
-            curl_setopt($ch, CURLOPT_USERPWD, $this->apiAuthUser.($this->apiAuthPassword ? ':'.$this->apiAuthPassword: ''));
+            curl_setopt($ch, CURLOPT_USERPWD, $this->apiAuthUser.($this->apiAuthPassword ? ':'.$this->apiAuthPassword : ''));
         }
 
         if ($this->getResponseFormat()) {
-            curl_setopt($ch, CURLOPT_HTTPHEADER, array(
-                'x-response-format: '.$this->getResponseFormat()
-            ));
+            curl_setopt($ch, CURLOPT_HTTPHEADER, [
+                'x-response-format: '.$this->getResponseFormat(),
+            ]);
         }
 
         $response = curl_exec($ch);
@@ -818,23 +947,23 @@ class Client
         $result = substr($response, $header_size);
 
         if (!$result) {
-            throw new Exception('No result found');
+            throw new CapitalistException('No result found');
         }
 
         // $this->log('Response headers: '. implode("\n\r", $this->getLastResponseHeaders()));
-        $this->log('Response body: '. $result);
+        $this->log('Response body: '.$result);
 
         return $this->setLastResult($result)->validateResult($result);
     }
-
-
 
     /**
      * Примитивная проверка, что ответ от сервера похож на заданный в заголовке.
      *
      * @param $result
+     *
+     * @throws CapitalistException
+     *
      * @return bool
-     * @throws Exception
      */
     protected function validateResult($result)
     {
@@ -854,14 +983,15 @@ class Client
     {
         try {
             $array = json_decode($result, true);
-        } catch (Exception $e) {
-            throw new Exception('Invalid response.');
+        } catch (CapitalistException $e) {
+            throw new CapitalistException('Invalid response.');
         }
         if (!$array || !isset($array['code']) || !isset($array['message']) || !isset($array['data'])) {
-            throw new Exception('Invalid response.');
+            throw new CapitalistExceptionn('Invalid response.');
         }
         $this->setLastErrorCode($array['code']);
         $this->setLastErrorMessage($array['message']);
+
         return !$this->hasError();
     }
 
@@ -869,14 +999,16 @@ class Client
      * Примитивная проверка, что ответ от сервера похож на CSV и обработка кода ошибки API.
      *
      * @param $result
+     *
+     * @throws CapitalistException
+     *
      * @return bool
-     * @throws Exception
      */
     protected function validateCsvResult($result)
     {
         $lines = explode("\n", $result);
         if (!preg_match('/^\d+\;.+$/', $lines[0])) {
-            throw new Exception('Invalid response.');
+            throw new CapitalistException('Invalid response.');
         }
         $firstline = explode(';', $lines[0]);
         $errorCode = $firstline[0];
@@ -884,83 +1016,9 @@ class Client
         if (!$errorCode) {
             $this->setLastErrorMessage(false);
         } else {
-            $this->setLastErrorMessage(isset($firstline[1]) ? $firstline[1] : '');
+            $this->setLastErrorMessage($firstline[1] ?? '');
         }
+
         return !$this->hasError();
-    }
-
-    /**
-     * @return string
-     */
-    public function getResponseFormat()
-    {
-        return $this->responseFormat;
-    }
-
-    /**
-     * @param string $responseFormat
-     * @return $this
-     */
-    public function setResponseFormat($responseFormat)
-    {
-        $this->responseFormat = $responseFormat;
-        return $this;
-    }
-
-    /**
-     * Формат последнего ответа, пришедший в заголовке ответа,
-     * при нормальном функционировании, всегда совпадае с x-response-format переданным в заголовках запроса.
-     * Если не совпадают, значит что-то пошло не так.
-     *
-     * @return string
-     */
-    public function getLastResponseFormat()
-    {
-        $headers = $this->getLastResponseHeaders();
-        return isset($headers['x-response-format']) ? $headers['x-response-format'] : null;
-    }
-
-
-
-    /**
-     * @return array
-     */
-    public function getLastResponseHeaders()
-    {
-        return $this->lastResponseHeaders;
-    }
-
-    /**
-     * @param array $lastResponseHeaders
-     * @return $this
-     */
-    public function setLastResponseHeaders($lastResponseHeaders)
-    {
-        $this->lastResponseHeaders = $lastResponseHeaders;
-        return $this;
-    }
-
-    /**
-     * @param $string
-     * @return array
-     */
-    public function parseHttpHeaders($string)
-    {
-        $headers = [];
-        foreach ((array) explode("\r\n", $string) as $line) {
-            $kv = explode(': ', $line, 2);
-
-            if (isset($kv[0]) && trim($kv[0])) {
-                $headers[trim($kv[0])] = isset($kv[1]) ? $kv[1] : null;
-            }
-        }
-        return $headers;
-    }
-
-    public function log($string)
-    {
-        if ($this->debugLog) {
-            printf("\n[%s] debug log: %s\n", date('d.m.Y H:i:s'), $string);
-        }
     }
 }

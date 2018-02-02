@@ -1,46 +1,48 @@
 <?php
 
-namespace aLkRicha\Capitalist;
+declare(strict_types=1);
 
+/*
+ * This file is part of capitalist.net api.
+ * (с) 2015 Capitalist.
+ */
+
+namespace aLkRicha\Capitalist;
 
 use phpseclib\Crypt\RC4;
 use phpseclib\Crypt\RSA;
-use phpseclib\Math\BigInteger;
 
 class Signer
 {
-	/** @var RSA */
+    /** @var RSA */
     private $rsa = null;
 
-	public function __construct($in_path, $in_login=null, $in_pass=null)
-	{
-		$this->rsa = new RSA();
-		$key = null;
+    public function __construct($in_path, $in_login=null, $in_pass=null)
+    {
+        $this->rsa = new RSA();
+        $key       = null;
 
-		if(isset($in_login) && isset($in_pass) && (strlen($in_pass) > 0))
-		{
-			$pos = 0;
-			$encrypted_key_lines = file($in_path, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-			$salt = $encrypted_key_lines[0];
-			$keypassplain = $salt.$in_login.$in_pass;
-			$keypass = sha1($keypassplain, true );
+        if (isset($in_login, $in_pass)   && (strlen($in_pass) > 0)) {
+            $pos                 = 0;
+            $encrypted_key_lines = file($in_path, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+            $salt                = $encrypted_key_lines[0];
+            $keypassplain        = $salt.$in_login.$in_pass;
+            $keypass             = sha1($keypassplain, true);
 
-			$rc4 = new RC4();
-			$rc4->setKey($keypass);
+            $rc4 = new RC4();
+            $rc4->setKey($keypass);
 
-			$key = $rc4->decrypt(base64_decode($encrypted_key_lines[1]));
-		}
-		else
-		{
-			$key = file_get_contents($in_path);
-		}
+            $key = $rc4->decrypt(base64_decode($encrypted_key_lines[1]));
+        } else {
+            $key = file_get_contents($in_path);
+        }
 
-		$this->rsa->loadKey($key, RSA::PRIVATE_FORMAT_PKCS1);
-		$this->rsa->setSignatureMode(RSA::SIGNATURE_PKCS1);
-	}
+        $this->rsa->loadKey($key, RSA::PRIVATE_FORMAT_PKCS1);
+        $this->rsa->setSignatureMode(RSA::SIGNATURE_PKCS1);
+    }
 
-	public function sign($plaintext)
-	{
-		return base64_encode ($this->rsa->sign($plaintext));
-	}
+    public function sign($plaintext)
+    {
+        return base64_encode($this->rsa->sign($plaintext));
+    }
 }
