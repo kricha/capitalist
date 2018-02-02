@@ -10,7 +10,8 @@
             "aLkRicha\\Capitalist\\": "src/"
         }
     },
-    "minimum-stability":"dev",
+    "minimum-stability": "dev",
+    "prefer-stable": true,
     "authors": [
         {
             "name": "aLkRicha",
