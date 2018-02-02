@@ -1,10 +1,13 @@
 {
     "name": "alkricha/capitalist",
     "type": "library",
+    "keywords": ["capitalist", "capitalist.net", "api", "payment"],
+    "homepage": "https://github.com/aLkRicha/capitalist",
+     "description": "The API allows developers to integrate their applications into the Capitalist system for automated downloading payments into the system.",
     "require": {
         "phpseclib/phpseclib": "^2.0"
     },
-    "license": "mit",
+    "license": "MIT",
     "autoload": {
         "psr-4": {
             "aLkRicha\\Capitalist\\": "src/"
