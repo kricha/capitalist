@@ -1,0 +1,19 @@
+{
+    "name": "aLkRicha/capitalist",
+    "type": "library",
+    "require": {
+        "phpseclib/phpseclib": "^2.0"
+    },
+    "license": "mit",
+    "autoload": {
+        "psr-4": {
+            "aLkRicha\\Capitalist\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "aLkRicha",
+            "email": "krich.al.vl@gmail.com"
+        }
+    ]
+}
