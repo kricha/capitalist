@@ -35,7 +35,7 @@ class Client
     const OPERATION_GET_BATCH_INFO                  = 'get_batch_info';
     const OPERATION_REGISTER_INVITEE                = 'register_invitee';
     const OPERATION_GET_HISTORY                     = 'get_documents_history';
-    const OPERATION_GET_HISTORY_TEST                = 'get_documents_history_test';
+    const OPERATION_GET_HISTORY_EXT                = 'get_documents_history_ext';
     const OPERATION_GET_ACCOUNTS                    = 'get_accounts';
     const OPERATION_CREATE_ACCOUNT                  = 'create_account';
     const OPERATION_GET_DOCUMENT_FEE                = 'get_document_fee';
@@ -623,6 +623,7 @@ class Client
     {
         if (!$this->sendPost($this::OPERATION_GET_HISTORY, [
             'encrypted_password' => $this->getPassword(),
+            'login' => $this->getUsername(),
             'token' => $this->token,
             'account' => $account,
             'period_from' => $from,
@@ -654,10 +655,11 @@ class Client
      *
      * @return string
      */
-    public function getHistoryTest($account, $from = null, $to = null, $docState = null, $limit = 30, $page = 1)
+    public function getHistoryExt($account, $from = null, $to = null, $docState = null, $limit = 30, $page = 1)
     {
-        if (!$this->sendPost($this::OPERATION_GET_HISTORY_TEST, [
+        if (!$this->sendPost($this::OPERATION_GET_HISTORY_EXT, [
             'encrypted_password' => $this->getPassword(),
+            'login' => $this->getUsername(),
             'token' => $this->token,
             'account' => $account,
             'period_from' => $from,
